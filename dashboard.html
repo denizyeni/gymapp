@@ -67,6 +67,32 @@
       transition: background 150ms ease;
     }
     .logout-btn:hover { background: rgba(224, 122, 95, 0.25); }
+    .password-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(129, 178, 154, 0.15);
+      color: var(--accent);
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+    .password-btn:hover { background: rgba(129, 178, 154, 0.25); }
+    .modal input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid var(--bg-elevated);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 150ms ease;
+      margin-bottom: 12px;
+    }
+    .modal input[type="password"]:focus { border-color: var(--accent); }
     .user-avatar {
       width: 36px;
       height: 36px;
@@ -323,6 +349,7 @@
     <header>
       <h1>Gym Tracker</h1>
       <div class="header-right">
+        <button class="password-btn" id="password-btn">Password</button>
         <button class="logout-btn" id="logout-btn">Log Out</button>
         <div class="user-avatar" id="user-avatar" title="Change profile photo"></div>
         <div class="user-badge" id="user-badge" title="Change name">-</div>
@@ -429,8 +456,28 @@
     </div>
   </div>
 
+  <!-- Password Change Modal -->
+  <div class="modal-backdrop" id="password-modal">
+    <div class="modal">
+      <h3>Change Password</h3>
+      <p>Enter your current and new password</p>
+      <label for="current-password">Current Password</label>
+      <input type="password" id="current-password" placeholder="Current password">
+      <label for="new-password">New Password</label>
+      <input type="password" id="new-password" placeholder="New password (min 6 chars)">
+      <label for="confirm-password">Confirm New Password</label>
+      <input type="password" id="confirm-password" placeholder="Confirm new password">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="cancel-password-btn">Cancel</button>
+        <button class="modal-btn primary" id="save-password-btn">Update</button>
+      </div>
+      <div class="upload-status" id="password-status"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { db, auth, doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp, signOut, onAuthStateChanged } from './firebase-config.js';
+    import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     // Map Firebase Auth emails to user IDs
     const EMAIL_TO_USER = {
@@ -893,6 +940,73 @@
       }
     }
 
+    // ========== PASSWORD CHANGE ==========
+    const passwordModal = $('password-modal');
+    const currentPasswordInput = $('current-password');
+    const newPasswordInput = $('new-password');
+    const confirmPasswordInput = $('confirm-password');
+    const passwordStatus = $('password-status');
+
+    function openPasswordModal() {
+      currentPasswordInput.value = '';
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      passwordStatus.textContent = '';
+      passwordStatus.classList.remove('error');
+      passwordModal.classList.add('active');
+      setTimeout(() => currentPasswordInput.focus(), 100);
+    }
+
+    function closePasswordModal() {
+      passwordModal.classList.remove('active');
+    }
+
+    async function changePassword() {
+      const currentPwd = currentPasswordInput.value;
+      const newPwd = newPasswordInput.value;
+      const confirmPwd = confirmPasswordInput.value;
+
+      if (!currentPwd || !newPwd || !confirmPwd) {
+        passwordStatus.textContent = 'Please fill all fields';
+        passwordStatus.classList.add('error');
+        return;
+      }
+
+      if (newPwd.length < 6) {
+        passwordStatus.textContent = 'Password must be at least 6 characters';
+        passwordStatus.classList.add('error');
+        return;
+      }
+
+      if (newPwd !== confirmPwd) {
+        passwordStatus.textContent = 'New passwords do not match';
+        passwordStatus.classList.add('error');
+        return;
+      }
+
+      passwordStatus.textContent = 'Updating...';
+      passwordStatus.classList.remove('error');
+
+      try {
+        const user = auth.currentUser;
+        const credential = EmailAuthProvider.credential(user.email, currentPwd);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPwd);
+        passwordStatus.textContent = 'Password updated!';
+        setTimeout(closePasswordModal, 1500);
+      } catch (error) {
+        console.error('Password change error:', error);
+        let msg = 'Failed to update password';
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          msg = 'Current password is incorrect';
+        } else if (error.code === 'auth/weak-password') {
+          msg = 'Password is too weak';
+        }
+        passwordStatus.textContent = msg;
+        passwordStatus.classList.add('error');
+      }
+    }
+
     // ========== EVENT LISTENERS ==========
     function setupEventListeners() {
       els.viewMyBtn.onclick = () => switchView(false);
@@ -925,6 +1039,12 @@
 
       // Logout
       $('logout-btn').onclick = handleLogout;
+
+      // Password modal
+      $('password-btn').onclick = openPasswordModal;
+      $('cancel-password-btn').onclick = closePasswordModal;
+      $('save-password-btn').onclick = changePassword;
+      passwordModal.onclick = e => { if (e.target === passwordModal) closePasswordModal(); };
     }
 
     // ========== INIT APP ==========
