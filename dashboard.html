@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gym Tracker Dashboard</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #1f2940;
+      --bg-elevated: #273552;
+      --text-primary: #e8e8e8;
+      --text-secondary: #a0a0a0;
+      --accent: #81b29a;
+      --accent-hover: #6fa088;
+      --danger: #e07a5f;
+      --warning: #f2cc8f;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .container {
+      width: min(520px, 100%);
+      background: var(--bg-card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    header {
+      padding: 20px 24px;
+      background: linear-gradient(135deg, var(--bg-elevated), var(--bg-card));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid rgba(129, 178, 154, 0.3);
+      transition: border-color 150ms ease, transform 150ms ease;
+    }
+    .user-avatar:hover { border-color: var(--accent); transform: scale(1.05); }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .user-badge {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(129, 178, 154, 0.15);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+    .user-badge:hover { background: rgba(129, 178, 154, 0.25); }
+    .view-toggle {
+      padding: 12px 20px;
+      background: var(--bg-elevated);
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .toggle-btn {
+      padding: 10px 20px;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+    .toggle-btn:hover { border-color: var(--accent); }
+    .toggle-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .month-nav {
+      padding: 20px 24px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .month-nav h2 {
+      margin: 0;
+      font-size: 22px;
+      color: var(--text-primary);
+      flex: 1;
+      text-align: center;
+    }
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 12px;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 140ms ease, background 140ms ease;
+      display: grid;
+      place-items: center;
+    }
+    .nav-btn:hover { background: var(--accent); transform: translateY(-2px); }
+    .calendar-wrap { padding: 0 24px 24px; }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .weekday {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 8px 4px;
+    }
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .day {
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .day.other-month { opacity: 0.3; cursor: default; background: var(--bg-elevated); }
+    .day.current-month { background: var(--danger); color: white; }
+    .day.logged { background: var(--accent); color: white; cursor: pointer; }
+    .day.today { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(242, 204, 143, 0.2); }
+    .day:not(.other-month):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    .day-number { font-size: 16px; margin-bottom: 2px; }
+    .day-indicator { font-size: 10px; opacity: 0.85; }
+    .legend {
+      padding: 16px 24px;
+      background: var(--bg-elevated);
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+    .legend-box { width: 20px; height: 20px; border-radius: 6px; }
+    .legend-box.missed { background: var(--danger); }
+    .legend-box.logged { background: var(--accent); }
+    .check-in-btn {
+      margin: 24px;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: calc(100% - 48px);
+      transition: transform 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 6px 20px rgba(129, 178, 154, 0.25);
+    }
+    .check-in-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(129, 178, 154, 0.35); }
+    
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 24px;
+      width: min(400px, 100%);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .modal h3 { margin: 0 0 8px 0; font-size: 20px; color: var(--text-primary); }
+    .modal p { margin: 0 0 16px 0; color: var(--text-secondary); font-size: 14px; }
+    .photo-preview {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg-elevated);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+    .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-preview { aspect-ratio: 1; width: 120px; margin: 0 auto 16px; border-radius: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-bottom: 12px; }
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+    .modal-btn.secondary { background: var(--bg-elevated); color: var(--text-primary); }
+    .modal-btn.primary { background: var(--accent); color: white; }
+    .modal-btn.primary:disabled { background: #444; cursor: not-allowed; color: #888; }
+    .modal-btn:not(:disabled):hover { transform: translateY(-2px); }
+    .modal-close {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .modal-close:hover { background: var(--bg-elevated); }
+    .upload-status {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--accent);
+      min-height: 20px;
+    }
+    .upload-status.error { color: var(--danger); }
+    .viewer-modal { text-align: center; }
+    .viewer-modal h3 { margin-bottom: 4px; }
+    .viewer-modal p { color: var(--text-secondary); margin-bottom: 16px; }
+    .viewer-photo { aspect-ratio: 3/4; max-height: 50vh; }
+    .viewer-photo img { border-radius: 12px; }
+
+    /* Text input for name */
+    .modal input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid var(--bg-elevated);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 150ms ease;
+      margin-bottom: 12px;
+    }
+    .modal input[type="text"]:focus { border-color: var(--accent); }
+    .modal label { 
+      font-size: 12px; 
+      font-weight: 600; 
+      color: var(--text-secondary); 
+      display: block; 
+      margin-bottom: 6px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px; 
+    }
+    
+    @media (max-width: 560px) {
+      body { padding: 12px; }
+      .container { border-radius: 24px; }
+      .day-number { font-size: 14px; }
+      .weekday { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gym Tracker</h1>
+      <div class="header-right">
+        <div class="user-avatar" id="user-avatar" title="Change profile photo"></div>
+        <div class="user-badge" id="user-badge" title="Change name">-</div>
+      </div>
+    </header>
+
+    <div class="view-toggle">
+      <button class="toggle-btn active" id="view-my-btn">My Calendar</button>
+      <button class="toggle-btn" id="view-partner-btn">Partner's Calendar</button>
+    </div>
+
+    <div class="month-nav">
+      <button class="nav-btn" id="prev-month">&lt;</button>
+      <h2 id="month-title">January 2026</h2>
+      <button class="nav-btn" id="next-month">&gt;</button>
+    </div>
+
+    <div class="calendar-wrap">
+      <div class="weekdays">
+        <div class="weekday">Sun</div>
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+      </div>
+      <div class="days" id="days-grid"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box missed"></div>
+        <span>Not logged</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box logged"></div>
+        <span>Gym day</span>
+      </div>
+    </div>
+
+    <button class="check-in-btn" id="check-in-btn">Check In Today</button>
+  </div>
+
+  <!-- Photo Viewer Modal -->
+  <div class="modal-backdrop" id="photo-viewer">
+    <div class="modal viewer-modal">
+      <h3 id="viewer-title">Check-In Proof</h3>
+      <p id="viewer-date">-</p>
+      <div class="photo-preview viewer-photo" id="viewer-image">
+        <span>Loading...</span>
+      </div>
+      <button class="modal-close" id="close-viewer">Close</button>
+    </div>
+  </div>
+
+  <!-- Photo Upload Modal -->
+  <div class="modal-backdrop" id="photo-modal">
+    <div class="modal">
+      <h3>Gym Check-In</h3>
+      <p>Select a photo</p>
+      <div class="photo-preview" id="photo-preview">
+        <span>No photo selected</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="select-photo-btn">Select Photo</button>
+        <button class="modal-btn primary" id="upload-btn" disabled>Submit</button>
+      </div>
+      <button class="modal-close" id="close-modal">Cancel</button>
+      <div class="upload-status" id="upload-status"></div>
+    </div>
+  </div>
+
+  <!-- Profile Picture Modal -->
+  <div class="modal-backdrop" id="avatar-modal">
+    <div class="modal">
+      <h3>Change Profile Photo</h3>
+      <p>Select a new profile picture</p>
+      <div class="photo-preview avatar-preview" id="avatar-preview">
+        <span>No photo</span>
+      </div>
+      <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="select-avatar-btn">Choose Photo</button>
+        <button class="modal-btn primary" id="save-avatar-btn" disabled>Save</button>
+      </div>
+      <button class="modal-close" id="close-avatar-modal">Cancel</button>
+      <div class="upload-status" id="avatar-status"></div>
+    </div>
+  </div>
+
+  <!-- Name Change Modal -->
+  <div class="modal-backdrop" id="name-modal">
+    <div class="modal">
+      <h3>Change Display Name</h3>
+      <p>Enter your new display name</p>
+      <label for="name-input">Name</label>
+      <input type="text" id="name-input" placeholder="Enter name" maxlength="20">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="cancel-name-btn">Cancel</button>
+        <button class="modal-btn primary" id="save-name-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from './firebase-config.js';
+
+    // ========== CONFIGURATION ==========
+    const CLOUDINARY_CLOUD_NAME = 'dgh2nhilm';
+    const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+
+    // ========== STATE ==========
+    const params = new URLSearchParams(window.location.search);
+    const userParam = params.get('user');
+    
+    // Validate user - must be user1 or user2, redirect to login if invalid
+    if (!userParam || (userParam !== 'user1' && userParam !== 'user2')) {
+      window.location.href = 'index.html';
+      throw new Error('Invalid user');
+    }
+    
+    const currentUser = userParam;
+    const partnerUser = currentUser === 'user1' ? 'user2' : 'user1';
+    
+    const DEFAULT_AVATARS = {
+      user1: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=60',
+      user2: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=60'
+    };
+    const DEFAULT_NAMES = { user1: 'Deniz', user2: 'Bogi' };
+    
+    let currentMonth = new Date();
+    let viewingPartner = false;
+    let myCheckIns = new Map();
+    let partnerCheckIns = new Map();
+    let selectedPhoto = null;
+    let avatars = { ...DEFAULT_AVATARS };
+    let names = { ...DEFAULT_NAMES };
+    let selectedAvatar = null;
+
+    // ========== DOM ELEMENTS ==========
+    const $ = id => document.getElementById(id);
+    const els = {
+      userBadge: $('user-badge'),
+      userAvatar: $('user-avatar'),
+      viewMyBtn: $('view-my-btn'),
+      viewPartnerBtn: $('view-partner-btn'),
+      monthTitle: $('month-title'),
+      prevMonth: $('prev-month'),
+      nextMonth: $('next-month'),
+      daysGrid: $('days-grid'),
+      checkInBtn: $('check-in-btn'),
+      photoModal: $('photo-modal'),
+      photoInput: $('photo-input'),
+      photoPreview: $('photo-preview'),
+      selectPhotoBtn: $('select-photo-btn'),
+      uploadBtn: $('upload-btn'),
+      closeModal: $('close-modal'),
+      uploadStatus: $('upload-status'),
+      photoViewer: $('photo-viewer'),
+      viewerTitle: $('viewer-title'),
+      viewerDate: $('viewer-date'),
+      viewerImage: $('viewer-image'),
+      closeViewer: $('close-viewer'),
+      avatarModal: $('avatar-modal'),
+      avatarInput: $('avatar-input'),
+      avatarPreview: $('avatar-preview'),
+      selectAvatarBtn: $('select-avatar-btn'),
+      saveAvatarBtn: $('save-avatar-btn'),
+      closeAvatarModal: $('close-avatar-modal'),
+      avatarStatus: $('avatar-status'),
+      nameModal: $('name-modal'),
+      nameInput: $('name-input'),
+      cancelNameBtn: $('cancel-name-btn'),
+      saveNameBtn: $('save-name-btn')
+    };
+
+    // ========== UTILITIES ==========
+    const formatDate = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const getTodayStr = () => { const d = new Date(); return formatDate(d.getFullYear(), d.getMonth(), d.getDate()); };
+    const isToday = (y, m, d) => { const t = new Date(); return y === t.getFullYear() && m === t.getMonth() && d === t.getDate(); };
+
+    // ========== CALENDAR RENDERING ==========
+    function updateTitle() {
+      const userId = viewingPartner ? partnerUser : currentUser;
+      const name = names[userId];
+      els.monthTitle.textContent = `${name}'s ${MONTH_NAMES[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+    }
+
+    function renderCalendar() {
+      const checkIns = viewingPartner ? partnerCheckIns : myCheckIns;
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+
+      els.daysGrid.innerHTML = '';
+
+      // Previous month days
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'day other-month';
+        cell.innerHTML = `<span class="day-number">${prevMonthDays - i}</span>`;
+        els.daysGrid.appendChild(cell);
+      }
+
+      // Current month days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(year, month, day);
+        const logged = checkIns.has(dateStr);
+        const today = isToday(year, month, day);
+        
+        const cell = document.createElement('div');
+        cell.className = `day current-month${logged ? ' logged' : ''}${today ? ' today' : ''}`;
+        cell.innerHTML = `<span class="day-number">${day}</span>${logged ? '<span class="day-indicator">*</span>' : ''}`;
+        
+        if (logged) {
+          cell.style.cursor = 'pointer';
+          cell.addEventListener('click', () => showPhoto(dateStr, day, month, year));
+        }
+        els.daysGrid.appendChild(cell);
+      }
+
+      // Next month days
+      const totalCells = els.daysGrid.children.length;
+      const remaining = 42 - totalCells;
+      for (let day = 1; day <= remaining; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'day other-month';
+        cell.innerHTML = `<span class="day-number">${day}</span>`;
+        els.daysGrid.appendChild(cell);
+      }
+    }
+
+    // ========== VIEW SWITCHING ==========
+    function switchView(toPartner) {
+      viewingPartner = toPartner;
+      els.viewMyBtn.classList.toggle('active', !toPartner);
+      els.viewPartnerBtn.classList.toggle('active', toPartner);
+      els.checkInBtn.style.display = toPartner ? 'none' : 'block';
+      updateTitle();
+      renderCalendar();
+    }
+
+    // ========== PHOTO VIEWER ==========
+    function showPhoto(dateStr, day, month, year) {
+      const checkIns = viewingPartner ? partnerCheckIns : myCheckIns;
+      const userId = viewingPartner ? partnerUser : currentUser;
+      const name = names[userId];
+      const photoUrl = checkIns.get(dateStr);
+
+      els.viewerTitle.textContent = `${name}'s Check-In`;
+      els.viewerDate.textContent = `${MONTH_NAMES[month]} ${day}, ${year}`;
+      els.viewerImage.innerHTML = photoUrl 
+        ? `<img src="${photoUrl}" alt="Gym proof">`
+        : '<span>No photo available</span>';
+      els.photoViewer.classList.add('active');
+    }
+
+    // ========== PHOTO UPLOAD MODAL ==========
+    function openUploadModal() {
+      if (myCheckIns.has(getTodayStr())) {
+        alert('You already checked in today!');
+        return;
+      }
+      selectedPhoto = null;
+      els.photoPreview.innerHTML = '<span>No photo selected</span>';
+      els.uploadBtn.disabled = true;
+      els.uploadStatus.textContent = '';
+      els.uploadStatus.classList.remove('error');
+      els.photoModal.classList.add('active');
+    }
+
+    async function compressImage(file, maxSize = 800) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            if (width > height && width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            canvas.toBlob(resolve, 'image/jpeg', 0.8);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handlePhotoSelect(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      els.uploadStatus.textContent = 'Processing...';
+      try {
+        selectedPhoto = await compressImage(file);
+        els.photoPreview.innerHTML = `<img src="${URL.createObjectURL(selectedPhoto)}" alt="Preview">`;
+        els.uploadBtn.disabled = false;
+        els.uploadStatus.textContent = 'Photo ready!';
+      } catch (err) {
+        els.uploadStatus.textContent = 'Error processing photo';
+        els.uploadStatus.classList.add('error');
+      }
+    }
+
+    async function submitCheckIn() {
+      if (!selectedPhoto) return;
+      
+      const todayStr = getTodayStr();
+      els.uploadBtn.disabled = true;
+      els.uploadStatus.textContent = 'Uploading...';
+      els.uploadStatus.classList.remove('error');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedPhoto);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', `gym-tracker/${currentUser}`);
+
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `Upload failed (${response.status})`);
+        }
+
+        const data = await response.json();
+        const photoUrl = data.secure_url;
+
+        els.uploadStatus.textContent = 'Saving...';
+
+        await addDoc(collection(db, 'check-ins'), {
+          userId: currentUser,
+          date: todayStr,
+          photoUrl: photoUrl,
+          timestamp: serverTimestamp()
+        });
+
+        myCheckIns.set(todayStr, photoUrl);
+        els.uploadStatus.textContent = 'Done!';
+        renderCalendar();
+
+        setTimeout(() => els.photoModal.classList.remove('active'), 1000);
+
+      } catch (err) {
+        console.error('Upload error:', err);
+        els.uploadStatus.textContent = `Error: ${err.message}`;
+        els.uploadStatus.classList.add('error');
+        els.uploadBtn.disabled = false;
+      }
+    }
+
+    // ========== LOAD DATA ==========
+    async function loadCheckIns() {
+      try {
+        const [mySnap, partnerSnap] = await Promise.all([
+          getDocs(query(collection(db, 'check-ins'), where('userId', '==', currentUser))),
+          getDocs(query(collection(db, 'check-ins'), where('userId', '==', partnerUser)))
+        ]);
+
+        mySnap.forEach(doc => {
+          const d = doc.data();
+          myCheckIns.set(d.date, d.photoUrl || null);
+        });
+
+        partnerSnap.forEach(doc => {
+          const d = doc.data();
+          partnerCheckIns.set(d.date, d.photoUrl || null);
+        });
+
+        console.log(`Loaded: ${myCheckIns.size} my check-ins, ${partnerCheckIns.size} partner check-ins`);
+      } catch (err) {
+        console.error('Failed to load check-ins:', err);
+      }
+      renderCalendar();
+    }
+
+    async function loadAvatars() {
+      try {
+        const avatarSnap = await getDoc(doc(db, 'gym-config', 'avatars'));
+        if (avatarSnap.exists()) avatars = { ...DEFAULT_AVATARS, ...avatarSnap.data() };
+      } catch (e) {
+        console.error('Failed to load avatars:', e);
+      }
+      updateAvatarDisplay();
+    }
+
+    async function loadNames() {
+      try {
+        const namesSnap = await getDoc(doc(db, 'gym-config', 'names'));
+        if (namesSnap.exists()) names = { ...DEFAULT_NAMES, ...namesSnap.data() };
+      } catch (e) {
+        console.error('Failed to load names:', e);
+      }
+      updateNameDisplay();
+    }
+
+    function updateAvatarDisplay() {
+      els.userAvatar.innerHTML = `<img src="${avatars[currentUser]}" alt="${names[currentUser]}">`;
+    }
+
+    function updateNameDisplay() {
+      els.userBadge.textContent = names[currentUser];
+      els.viewMyBtn.textContent = `${names[currentUser]}'s Calendar`;
+      els.viewPartnerBtn.textContent = `${names[partnerUser]}'s Calendar`;
+      updateTitle();
+    }
+
+    // ========== AVATAR CHANGE ==========
+    function openAvatarModal() {
+      selectedAvatar = null;
+      els.avatarPreview.innerHTML = `<img src="${avatars[currentUser]}" alt="${names[currentUser]}">`;
+      els.saveAvatarBtn.disabled = true;
+      els.avatarStatus.textContent = '';
+      els.avatarModal.classList.add('active');
+    }
+
+    function closeAvatarModal() {
+      els.avatarModal.classList.remove('active');
+      selectedAvatar = null;
+    }
+
+    async function compressAvatarImage(file) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const size = 400;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const min = Math.min(img.width, img.height);
+            const sx = (img.width - min) / 2;
+            const sy = (img.height - min) / 2;
+            ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+            canvas.toBlob(resolve, 'image/jpeg', 0.8);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleAvatarSelect(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      els.avatarStatus.textContent = 'Processing...';
+      try {
+        selectedAvatar = await compressAvatarImage(file);
+        els.avatarPreview.innerHTML = `<img src="${URL.createObjectURL(selectedAvatar)}" alt="Preview">`;
+        els.saveAvatarBtn.disabled = false;
+        els.avatarStatus.textContent = 'Photo ready!';
+      } catch (err) {
+        els.avatarStatus.textContent = 'Error processing photo';
+        els.avatarStatus.classList.add('error');
+      }
+    }
+
+    async function saveAvatar() {
+      if (!selectedAvatar) return;
+      els.saveAvatarBtn.disabled = true;
+      els.avatarStatus.textContent = 'Uploading...';
+      els.avatarStatus.classList.remove('error');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedAvatar);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'gym-tracker/avatars');
+
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('Upload failed');
+
+        const data = await response.json();
+        avatars[currentUser] = data.secure_url;
+
+        await setDoc(doc(db, 'gym-config', 'avatars'), avatars, { merge: true });
+
+        updateAvatarDisplay();
+        els.avatarStatus.textContent = 'Done!';
+        setTimeout(closeAvatarModal, 800);
+      } catch (err) {
+        console.error('Upload error:', err);
+        els.avatarStatus.textContent = 'Upload failed';
+        els.avatarStatus.classList.add('error');
+        els.saveAvatarBtn.disabled = false;
+      }
+    }
+
+    // ========== NAME CHANGE ==========
+    function openNameModal() {
+      els.nameInput.value = names[currentUser];
+      els.nameModal.classList.add('active');
+      setTimeout(() => els.nameInput.focus(), 100);
+    }
+
+    function closeNameModal() {
+      els.nameModal.classList.remove('active');
+    }
+
+    async function saveName() {
+      const newName = els.nameInput.value.trim();
+      if (!newName) return;
+
+      names[currentUser] = newName;
+      try {
+        await setDoc(doc(db, 'gym-config', 'names'), names, { merge: true });
+      } catch (e) {
+        console.error('Failed to save name:', e);
+      }
+      updateNameDisplay();
+      closeNameModal();
+    }
+
+    // ========== EVENT LISTENERS ==========
+    els.viewMyBtn.onclick = () => switchView(false);
+    els.viewPartnerBtn.onclick = () => switchView(true);
+    els.prevMonth.onclick = () => { currentMonth.setMonth(currentMonth.getMonth() - 1); updateTitle(); renderCalendar(); };
+    els.nextMonth.onclick = () => { currentMonth.setMonth(currentMonth.getMonth() + 1); updateTitle(); renderCalendar(); };
+    els.checkInBtn.onclick = openUploadModal;
+    els.selectPhotoBtn.onclick = () => els.photoInput.click();
+    els.photoInput.onchange = handlePhotoSelect;
+    els.uploadBtn.onclick = submitCheckIn;
+    els.closeModal.onclick = () => els.photoModal.classList.remove('active');
+    els.photoModal.onclick = e => { if (e.target === els.photoModal) els.photoModal.classList.remove('active'); };
+    els.closeViewer.onclick = () => els.photoViewer.classList.remove('active');
+    els.photoViewer.onclick = e => { if (e.target === els.photoViewer) els.photoViewer.classList.remove('active'); };
+    
+    // Avatar modal
+    els.userAvatar.onclick = openAvatarModal;
+    els.selectAvatarBtn.onclick = () => els.avatarInput.click();
+    els.avatarInput.onchange = handleAvatarSelect;
+    els.saveAvatarBtn.onclick = saveAvatar;
+    els.closeAvatarModal.onclick = closeAvatarModal;
+    els.avatarModal.onclick = e => { if (e.target === els.avatarModal) closeAvatarModal(); };
+
+    // Name modal
+    els.userBadge.onclick = openNameModal;
+    els.cancelNameBtn.onclick = closeNameModal;
+    els.saveNameBtn.onclick = saveName;
+    els.nameInput.onkeydown = e => { if (e.key === 'Enter') saveName(); };
+    els.nameModal.onclick = e => { if (e.target === els.nameModal) closeNameModal(); };
+
+    // ========== INIT ==========
+    loadAvatars();
+    loadNames();
+    loadCheckIns();
+  </script>
+</body>
+</html>

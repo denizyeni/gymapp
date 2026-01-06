@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gym Tracker Login</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a1a2e' width='100' height='100' rx='20'/><text y='65' x='50' text-anchor='middle' font-size='50'>💪</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #1f2940;
+      --bg-elevated: #273552;
+      --text-primary: #e8e8e8;
+      --text-secondary: #a0a0a0;
+      --accent: #81b29a;
+      --accent-hover: #6fa088;
+      --danger: #e07a5f;
+      --warning: #f2cc8f;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(145deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .container {
+      width: min(420px, 100%);
+      background: var(--bg-card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    header {
+      padding: 20px 24px;
+      background: linear-gradient(135deg, var(--bg-elevated), var(--bg-card));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+    .chip {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(129, 178, 154, 0.15);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    main { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Streak Widget */
+    .streak-widget { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .streak-card {
+      padding: 16px;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      text-align: center;
+      border: 2px solid transparent;
+      transition: border-color 150ms ease;
+    }
+    .streak-card.active { border-color: var(--danger); }
+    .streak-icon { font-size: 28px; margin-bottom: 4px; display: inline-block; color: var(--warning); }
+    .streak-card.active .streak-icon { animation: flame 0.5s ease-in-out infinite alternate; }
+    .streak-card.cold .streak-icon { opacity: 0.3; }
+    @keyframes flame {
+      from { transform: scale(1) rotate(-2deg); }
+      to { transform: scale(1.1) rotate(2deg); }
+    }
+    .streak-count { font-size: 26px; font-weight: 700; color: var(--danger); line-height: 1; }
+    .streak-card.cold .streak-count { color: var(--text-secondary); opacity: 0.5; }
+    .streak-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .streak-user { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+
+    /* User Cards */
+    .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card {
+      padding: 16px;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    }
+    .card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 3px solid var(--bg-card);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      margin-bottom: 12px;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .name-row h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .pill { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--bg-card); color: var(--text-secondary); }
+    .pill.ready { background: var(--accent); color: white; }
+    .status { margin: 6px 0 0 0; color: var(--text-secondary); font-size: 13px; }
+    .status.ready { color: var(--accent); }
+    .footer-note { text-align: center; color: var(--text-secondary); opacity: 0.5; font-size: 12px; padding-top: 4px; }
+
+    /* Sheet Modal */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 12px;
+      z-index: 10;
+    }
+    .sheet-backdrop.active { display: flex; }
+    .sheet {
+      width: min(420px, 100%);
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transform: translateY(10px);
+      transition: transform 150ms ease;
+    }
+    .sheet-backdrop.active .sheet { transform: translateY(0); }
+    .sheet h4 { margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .sheet p { margin: 0 0 16px 0; color: var(--text-secondary); font-size: 14px; }
+    label { font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid var(--bg-elevated);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+    input[type="password"]:focus, input[type="text"]:focus { border-color: var(--accent); background: var(--bg-secondary); }
+    .actions { margin-top: 16px; display: flex; gap: 10px; }
+    button {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 100ms ease, opacity 100ms ease;
+    }
+    button:active { transform: scale(0.98); }
+    button.primary { background: var(--accent); color: white; }
+    button.ghost { background: var(--bg-elevated); color: var(--text-primary); }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      z-index: 11;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .toast.error { background: var(--danger); }
+
+    /* Install Banner */
+    .install-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      padding: 16px 20px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 100;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner-text { flex: 1; }
+    .install-banner-text strong { display: block; font-size: 14px; color: var(--text-primary); }
+    .install-banner-text span { font-size: 12px; color: var(--text-secondary); }
+    .install-banner-btn {
+      padding: 10px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .install-banner-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .container { border-radius: 24px; }
+      .duo { grid-template-columns: 1fr; }
+      .card { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+      .avatar { margin: 0; width: 64px; height: 64px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gym Tracker</h1>
+      <div class="chip">Tap to log in</div>
+    </header>
+    <main>
+      <div class="streak-widget">
+        <div class="streak-card cold" id="streak-user1">
+          <div class="streak-user" id="streak-name-user1">User 1</div>
+          <div class="streak-icon">*</div>
+          <div class="streak-count" id="streak-count-user1">0</div>
+          <div class="streak-label">day streak</div>
+        </div>
+        <div class="streak-card cold" id="streak-user2">
+          <div class="streak-user" id="streak-name-user2">User 2</div>
+          <div class="streak-icon">*</div>
+          <div class="streak-count" id="streak-count-user2">0</div>
+          <div class="streak-label">day streak</div>
+        </div>
+      </div>
+      
+      <div class="duo">
+        <div class="card" data-user="user1">
+          <div class="avatar" id="avatar-user1"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=60" alt="User"></div>
+          <div>
+            <div class="name-row">
+              <h3 id="card-name-user1">User 1</h3>
+              <span class="pill" id="pill-user1">Not set</span>
+            </div>
+            <div class="status" id="status-user1">Tap to set password</div>
+          </div>
+        </div>
+        <div class="card" data-user="user2">
+          <div class="avatar" id="avatar-user2"><img src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=60" alt="User"></div>
+          <div>
+            <div class="name-row">
+              <h3 id="card-name-user2">User 2</h3>
+              <span class="pill" id="pill-user2">Not set</span>
+            </div>
+            <div class="status" id="status-user2">Tap to set password</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">Passwords stored in Firebase</div>
+    </main>
+  </div>
+
+  <!-- Password Sheet -->
+  <div class="sheet-backdrop" id="sheet-backdrop">
+    <div class="sheet" id="sheet">
+      <h4 id="sheet-title">Set password</h4>
+      <p id="sheet-sub">Keep it simple.</p>
+      <label for="pass-input">Password</label>
+      <input type="password" id="pass-input" autocomplete="new-password" placeholder="">
+      <div class="actions">
+        <button class="ghost" id="cancel-btn">Cancel</button>
+        <button class="primary" id="confirm-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Install Banner -->
+  <div class="install-banner" id="install-banner">
+    <div class="install-banner-text">
+      <strong>Add to Home Screen</strong>
+      <span>Tap Share then "Add to Home Screen"</span>
+    </div>
+    <button class="install-banner-btn" id="install-btn">How</button>
+    <button class="install-banner-close" id="install-close">x</button>
+  </div>
+
+  <script type="module">
+    import { db, doc, getDoc, setDoc, collection, query, where, getDocs } from './firebase-config.js';
+
+    const DEFAULT_AVATARS = {
+      user1: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=60',
+      user2: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=60'
+    };
+
+    const DEFAULT_NAMES = { user1: 'Deniz', user2: 'Bogi' };
+
+    let passwords = { user1: '', user2: '' };
+    let avatars = { ...DEFAULT_AVATARS };
+    let names = { ...DEFAULT_NAMES };
+    let currentUser = null;
+    let mode = 'set';
+
+    const $ = id => document.getElementById(id);
+    const sheetBackdrop = $('sheet-backdrop');
+    const sheetTitle = $('sheet-title');
+    const sheetSub = $('sheet-sub');
+    const passInput = $('pass-input');
+    const toastEl = $('toast');
+
+    function showToast(msg, isError) {
+      toastEl.textContent = msg;
+      toastEl.classList.toggle('error', Boolean(isError));
+      toastEl.style.display = 'block';
+      setTimeout(() => { toastEl.style.display = 'none'; }, 2500);
+    }
+
+    function updateUI() {
+      ['user1', 'user2'].forEach(userId => {
+        const isSet = Boolean(passwords[userId]);
+        const name = names[userId];
+        $(`pill-${userId}`).textContent = isSet ? 'Ready' : 'Not set';
+        $(`pill-${userId}`).classList.toggle('ready', isSet);
+        $(`status-${userId}`).textContent = isSet ? 'Enter password to continue' : 'Tap to set password';
+        $(`status-${userId}`).classList.toggle('ready', isSet);
+        $(`avatar-${userId}`).innerHTML = `<img src="${avatars[userId]}" alt="${name}">`;
+        $(`card-name-${userId}`).textContent = name;
+        $(`streak-name-${userId}`).textContent = name;
+      });
+    }
+
+    function openSheet(userId) {
+      currentUser = userId;
+      const isSet = Boolean(passwords[userId]);
+      mode = isSet ? 'enter' : 'set';
+      const name = names[userId];
+      sheetTitle.textContent = isSet ? 'Enter password' : 'Create password';
+      sheetSub.textContent = isSet ? `Welcome back, ${name}!` : 'First time setup';
+      passInput.value = '';
+      sheetBackdrop.classList.add('active');
+      setTimeout(() => passInput.focus(), 100);
+    }
+
+    function closeSheet() {
+      sheetBackdrop.classList.remove('active');
+      currentUser = null;
+    }
+
+    async function handleSubmit() {
+      if (!currentUser) return;
+      const value = passInput.value.trim();
+      if (!value) {
+        showToast('Please enter a password.', true);
+        return;
+      }
+
+      const userToLogin = currentUser;
+
+      if (mode === 'set') {
+        passwords[userToLogin] = value;
+        try {
+          await setDoc(doc(db, 'gym-config', 'passwords'), passwords, { merge: true });
+        } catch (e) {
+          console.error('Firebase save error:', e);
+        }
+        updateUI();
+        closeSheet();
+        showToast('Password saved!');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html?user=' + userToLogin;
+        }, 600);
+      } else {
+        if (value === passwords[userToLogin]) {
+          updateUI();
+          closeSheet();
+          showToast('Welcome back!');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html?user=' + userToLogin;
+          }, 600);
+        } else {
+          showToast('Incorrect password.', true);
+        }
+      }
+    }
+
+    // Streak calculation
+    function calculateStreak(dates) {
+      if (!dates.length) return 0;
+      const sorted = [...dates].sort((a, b) => b.localeCompare(a));
+      const today = new Date();
+      const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const todayStr = fmt(today);
+      
+      let checkDate = new Date(today);
+      if (sorted[0] !== todayStr) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        if (sorted[0] !== fmt(checkDate)) return 0;
+      }
+      
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        if (sorted.includes(fmt(checkDate))) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else break;
+      }
+      return streak;
+    }
+
+    function updateStreakUI(userId, streak) {
+      const card = $(`streak-${userId}`);
+      $(`streak-count-${userId}`).textContent = streak;
+      card.classList.toggle('cold', streak === 0);
+      card.classList.toggle('active', streak > 0);
+    }
+
+    async function loadStreaks() {
+      try {
+        for (const userId of ['user1', 'user2']) {
+          const snap = await getDocs(query(collection(db, 'check-ins'), where('userId', '==', userId)));
+          const dates = [];
+          snap.forEach(doc => dates.push(doc.data().date));
+          updateStreakUI(userId, calculateStreak(dates));
+        }
+      } catch (e) {
+        console.error('Failed to load streaks:', e);
+      }
+    }
+
+    // Event listeners
+    document.querySelectorAll('.card').forEach(card => {
+      card.onclick = () => openSheet(card.dataset.user);
+    });
+
+    sheetBackdrop.onclick = e => { if (e.target === sheetBackdrop) closeSheet(); };
+    $('cancel-btn').onclick = closeSheet;
+    $('confirm-btn').onclick = handleSubmit;
+    passInput.onkeydown = e => { if (e.key === 'Enter') handleSubmit(); };
+
+    // Init
+    (async function init() {
+      try {
+        const passSnap = await getDoc(doc(db, 'gym-config', 'passwords'));
+        if (passSnap.exists()) passwords = { user1: '', user2: '', ...passSnap.data() };
+        
+        const avatarSnap = await getDoc(doc(db, 'gym-config', 'avatars'));
+        if (avatarSnap.exists()) avatars = { ...DEFAULT_AVATARS, ...avatarSnap.data() };
+
+        const namesSnap = await getDoc(doc(db, 'gym-config', 'names'));
+        if (namesSnap.exists()) names = { ...DEFAULT_NAMES, ...namesSnap.data() };
+      } catch (e) {
+        console.error('Firebase load error:', e);
+      }
+      updateUI();
+      loadStreaks();
+
+      // Show install banner on iOS Safari if not already installed
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone === true;
+      const dismissed = localStorage.getItem('installBannerDismissed');
+      
+      if (isIOS && !isStandalone && !dismissed) {
+        setTimeout(() => $('install-banner').classList.add('show'), 2000);
+      }
+    })();
+
+    // Install banner handlers
+    $('install-btn').onclick = () => {
+      alert('1. Tap the Share button (square with arrow)\\n2. Scroll down and tap "Add to Home Screen"\\n3. Tap "Add" in the top right');
+    };
+    $('install-close').onclick = () => {
+      $('install-banner').classList.remove('show');
+      localStorage.setItem('installBannerDismissed', 'true');
+    };
+  </script>
+</body>
+</html>
