@@ -46,39 +46,27 @@
       overflow: hidden;
     }
     header {
-      padding: 20px 24px;
+      padding: 16px 20px;
       background: linear-gradient(135deg, var(--bg-elevated), var(--bg-card));
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    header h1 { margin: 0; font-size: 20px; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .logout-btn {
-      padding: 8px 12px;
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .header-btn {
+      padding: 8px 14px;
       border-radius: 10px;
       background: rgba(224, 122, 95, 0.15);
       color: var(--danger);
       border: none;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: background 150ms ease;
     }
-    .logout-btn:hover { background: rgba(224, 122, 95, 0.25); }
-    .password-btn {
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: rgba(129, 178, 154, 0.15);
-      color: var(--accent);
-      border: none;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 150ms ease;
-    }
-    .password-btn:hover { background: rgba(129, 178, 154, 0.25); }
+    .header-btn:hover { background: rgba(224, 122, 95, 0.25); }
     .modal input[type="password"] {
       width: 100%;
       padding: 14px 16px;
@@ -94,27 +82,25 @@
     }
     .modal input[type="password"]:focus { border-color: var(--accent); }
     .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       overflow: hidden;
       cursor: pointer;
       border: 2px solid rgba(129, 178, 154, 0.3);
       transition: border-color 150ms ease, transform 150ms ease;
+      flex-shrink: 0;
     }
     .user-avatar:hover { border-color: var(--accent); transform: scale(1.05); }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .user-badge {
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(129, 178, 154, 0.15);
+    .user-name {
+      font-size: 16px;
+      font-weight: 700;
       color: var(--accent);
-      font-size: 13px;
-      font-weight: 600;
       cursor: pointer;
-      transition: background 150ms ease;
+      transition: opacity 150ms ease;
     }
-    .user-badge:hover { background: rgba(129, 178, 154, 0.25); }
+    .user-name:hover { opacity: 0.8; }
     .view-toggle {
       padding: 12px 20px;
       background: var(--bg-elevated);
@@ -347,12 +333,13 @@
 <body>
   <div class="container">
     <header>
-      <h1>Gym Tracker</h1>
-      <div class="header-right">
-        <button class="password-btn" id="password-btn">Password</button>
-        <button class="logout-btn" id="logout-btn">Log Out</button>
+      <div class="header-left">
         <div class="user-avatar" id="user-avatar" title="Change profile photo"></div>
-        <div class="user-badge" id="user-badge" title="Change name">-</div>
+        <div class="user-name" id="user-name" title="Change name">-</div>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="password-btn">Password</button>
+        <button class="header-btn" id="logout-btn">Log Out</button>
       </div>
     </header>
 
@@ -540,7 +527,7 @@
     // ========== DOM ELEMENTS ==========
     const $ = id => document.getElementById(id);
     const els = {
-      userBadge: $('user-badge'),
+      userName: $('user-name'),
       userAvatar: $('user-avatar'),
       viewMyBtn: $('view-my-btn'),
       viewPartnerBtn: $('view-partner-btn'),
@@ -812,7 +799,7 @@
     }
 
     function updateNameDisplay() {
-      els.userBadge.textContent = names[currentUser];
+      els.userName.textContent = names[currentUser];
       els.viewMyBtn.textContent = `${names[currentUser]}'s Calendar`;
       els.viewPartnerBtn.textContent = `${names[partnerUser]}'s Calendar`;
       updateTitle();
@@ -1031,7 +1018,7 @@
       els.avatarModal.onclick = e => { if (e.target === els.avatarModal) closeAvatarModal(); };
 
       // Name modal
-      els.userBadge.onclick = openNameModal;
+      els.userName.onclick = openNameModal;
       els.cancelNameBtn.onclick = closeNameModal;
       els.saveNameBtn.onclick = saveName;
       els.nameInput.onkeydown = e => { if (e.key === 'Enter') saveName(); };
