@@ -63,10 +63,10 @@
       font-size: 13px;
       font-weight: 600;
     }
-    main { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    main { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 
     /* Streak Widget */
-    .streak-widget { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .streak-widget { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
     .streak-card {
       padding: 16px;
       border-radius: var(--radius);
@@ -88,62 +88,10 @@
     .streak-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
     .streak-user { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
 
-    /* User Cards */
-    .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .card {
-      padding: 16px;
-      border-radius: var(--radius);
-      background: var(--bg-elevated);
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-    }
-    .card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-    .avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 3px solid var(--bg-card);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      margin-bottom: 12px;
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .name-row h3 { margin: 0; font-size: 16px; font-weight: 700; }
-    .pill { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--bg-card); color: var(--text-secondary); }
-    .pill.ready { background: var(--accent); color: white; }
-    .status { margin: 6px 0 0 0; color: var(--text-secondary); font-size: 13px; }
-    .status.ready { color: var(--accent); }
-    .footer-note { text-align: center; color: var(--text-secondary); opacity: 0.5; font-size: 12px; padding-top: 4px; }
-
-    /* Sheet Modal */
-    .sheet-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 12px;
-      z-index: 10;
-    }
-    .sheet-backdrop.active { display: flex; }
-    .sheet {
-      width: min(420px, 100%);
-      background: var(--bg-card);
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-      transform: translateY(10px);
-      transition: transform 150ms ease;
-    }
-    .sheet-backdrop.active .sheet { transform: translateY(0); }
-    .sheet h4 { margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text-primary); }
-    .sheet p { margin: 0 0 16px 0; color: var(--text-secondary); font-size: 14px; }
+    /* Login Form */
+    .login-form { display: flex; flex-direction: column; gap: 16px; }
     label { font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    input[type="password"], input[type="text"] {
+    input[type="email"], input[type="password"] {
       width: 100%;
       padding: 14px 16px;
       border-radius: 12px;
@@ -155,22 +103,34 @@
       outline: none;
       transition: border-color 150ms ease, background 150ms ease;
     }
-    input[type="password"]:focus, input[type="text"]:focus { border-color: var(--accent); background: var(--bg-secondary); }
-    .actions { margin-top: 16px; display: flex; gap: 10px; }
-    button {
-      flex: 1;
-      padding: 14px 16px;
-      border-radius: 12px;
+    input[type="email"]:focus, input[type="password"]:focus { border-color: var(--accent); background: var(--bg-secondary); }
+    .login-btn {
+      width: 100%;
+      padding: 16px;
       border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: white;
+      font-size: 16px;
       font-weight: 700;
-      font-size: 14px;
-      font-family: inherit;
       cursor: pointer;
-      transition: transform 100ms ease, opacity 100ms ease;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 6px 20px rgba(129, 178, 154, 0.25);
+      font-family: inherit;
     }
-    button:active { transform: scale(0.98); }
-    button.primary { background: var(--accent); color: white; }
-    button.ghost { background: var(--bg-elevated); color: var(--text-primary); }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(129, 178, 154, 0.35); }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .error-msg {
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(224, 122, 95, 0.15);
+      color: var(--danger);
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    .error-msg.show { display: block; }
 
     .toast {
       position: fixed;
@@ -230,9 +190,6 @@
     @media (max-width: 480px) {
       body { padding: 12px; }
       .container { border-radius: 24px; }
-      .duo { grid-template-columns: 1fr; }
-      .card { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
-      .avatar { margin: 0; width: 64px; height: 64px; }
     }
   </style>
 </head>
@@ -240,62 +197,37 @@
   <div class="container">
     <header>
       <h1>Gym Tracker</h1>
-      <div class="chip">Tap to log in</div>
+      <div class="chip">Secure Login</div>
     </header>
     <main>
       <div class="streak-widget">
         <div class="streak-card cold" id="streak-user1">
-          <div class="streak-user" id="streak-name-user1">User 1</div>
+          <div class="streak-user" id="streak-name-user1">Deniz</div>
           <div class="streak-icon">*</div>
           <div class="streak-count" id="streak-count-user1">0</div>
           <div class="streak-label">day streak</div>
         </div>
         <div class="streak-card cold" id="streak-user2">
-          <div class="streak-user" id="streak-name-user2">User 2</div>
+          <div class="streak-user" id="streak-name-user2">Bogi</div>
           <div class="streak-icon">*</div>
           <div class="streak-count" id="streak-count-user2">0</div>
           <div class="streak-label">day streak</div>
         </div>
       </div>
       
-      <div class="duo">
-        <div class="card" data-user="user1">
-          <div class="avatar" id="avatar-user1"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=60" alt="User"></div>
-          <div>
-            <div class="name-row">
-              <h3 id="card-name-user1">User 1</h3>
-              <span class="pill" id="pill-user1">Not set</span>
-            </div>
-            <div class="status" id="status-user1">Tap to set password</div>
-          </div>
+      <form class="login-form" id="login-form">
+        <div>
+          <label for="email-input">Email</label>
+          <input type="email" id="email-input" placeholder="Enter your email" autocomplete="email" required>
         </div>
-        <div class="card" data-user="user2">
-          <div class="avatar" id="avatar-user2"><img src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=60" alt="User"></div>
-          <div>
-            <div class="name-row">
-              <h3 id="card-name-user2">User 2</h3>
-              <span class="pill" id="pill-user2">Not set</span>
-            </div>
-            <div class="status" id="status-user2">Tap to set password</div>
-          </div>
+        <div>
+          <label for="password-input">Password</label>
+          <input type="password" id="password-input" placeholder="Enter your password" autocomplete="current-password" required>
         </div>
-      </div>
-
+        <div class="error-msg" id="error-msg">Invalid email or password</div>
+        <button type="submit" class="login-btn" id="login-btn">Log In</button>
+      </form>
     </main>
-  </div>
-
-  <!-- Password Sheet -->
-  <div class="sheet-backdrop" id="sheet-backdrop">
-    <div class="sheet" id="sheet">
-      <h4 id="sheet-title">Set password</h4>
-      <p id="sheet-sub">Keep it simple.</p>
-      <label for="pass-input">Password</label>
-      <input type="password" id="pass-input" autocomplete="new-password" placeholder="">
-      <div class="actions">
-        <button class="ghost" id="cancel-btn">Cancel</button>
-        <button class="primary" id="confirm-btn">Save</button>
-      </div>
-    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -311,26 +243,23 @@
   </div>
 
   <script type="module">
-    import { db, doc, getDoc, setDoc, collection, query, where, getDocs } from './firebase-config.js';
+    import { db, auth, doc, getDoc, collection, query, where, getDocs, signInWithEmailAndPassword, onAuthStateChanged } from './firebase-config.js';
 
-    const DEFAULT_AVATARS = {
-      user1: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=60',
-      user2: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=400&q=60'
+    // Map Firebase Auth emails to user IDs
+    const EMAIL_TO_USER = {
+      'denizyeni@denizyeni.com': 'user1',
+      'bogi@bogi.com': 'user2'
     };
 
     const DEFAULT_NAMES = { user1: 'Deniz', user2: 'Bogi' };
-
-    let passwords = { user1: '', user2: '' };
-    let avatars = { ...DEFAULT_AVATARS };
     let names = { ...DEFAULT_NAMES };
-    let currentUser = null;
-    let mode = 'set';
 
     const $ = id => document.getElementById(id);
-    const sheetBackdrop = $('sheet-backdrop');
-    const sheetTitle = $('sheet-title');
-    const sheetSub = $('sheet-sub');
-    const passInput = $('pass-input');
+    const form = $('login-form');
+    const emailInput = $('email-input');
+    const passwordInput = $('password-input');
+    const loginBtn = $('login-btn');
+    const errorMsg = $('error-msg');
     const toastEl = $('toast');
 
     function showToast(msg, isError) {
@@ -340,72 +269,9 @@
       setTimeout(() => { toastEl.style.display = 'none'; }, 2500);
     }
 
-    function updateUI() {
-      ['user1', 'user2'].forEach(userId => {
-        const isSet = Boolean(passwords[userId]);
-        const name = names[userId];
-        $(`pill-${userId}`).textContent = isSet ? 'Ready' : 'Not set';
-        $(`pill-${userId}`).classList.toggle('ready', isSet);
-        $(`status-${userId}`).textContent = isSet ? 'Enter password to continue' : 'Tap to set password';
-        $(`status-${userId}`).classList.toggle('ready', isSet);
-        $(`avatar-${userId}`).innerHTML = `<img src="${avatars[userId]}" alt="${name}">`;
-        $(`card-name-${userId}`).textContent = name;
-        $(`streak-name-${userId}`).textContent = name;
-      });
-    }
-
-    function openSheet(userId) {
-      currentUser = userId;
-      const isSet = Boolean(passwords[userId]);
-      mode = isSet ? 'enter' : 'set';
-      const name = names[userId];
-      sheetTitle.textContent = isSet ? 'Enter password' : 'Create password';
-      sheetSub.textContent = isSet ? `Welcome back, ${name}!` : 'First time setup';
-      passInput.value = '';
-      sheetBackdrop.classList.add('active');
-      setTimeout(() => passInput.focus(), 100);
-    }
-
-    function closeSheet() {
-      sheetBackdrop.classList.remove('active');
-      currentUser = null;
-    }
-
-    async function handleSubmit() {
-      if (!currentUser) return;
-      const value = passInput.value.trim();
-      if (!value) {
-        showToast('Please enter a password.', true);
-        return;
-      }
-
-      const userToLogin = currentUser;
-
-      if (mode === 'set') {
-        passwords[userToLogin] = value;
-        try {
-          await setDoc(doc(db, 'gym-config', 'passwords'), passwords, { merge: true });
-        } catch (e) {
-          console.error('Firebase save error:', e);
-        }
-        updateUI();
-        closeSheet();
-        showToast('Password saved!');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html?user=' + userToLogin;
-        }, 600);
-      } else {
-        if (value === passwords[userToLogin]) {
-          updateUI();
-          closeSheet();
-          showToast('Welcome back!');
-          setTimeout(() => {
-            window.location.href = 'dashboard.html?user=' + userToLogin;
-          }, 600);
-        } else {
-          showToast('Incorrect password.', true);
-        }
-      }
+    function updateStreakNames() {
+      $('streak-name-user1').textContent = names.user1;
+      $('streak-name-user2').textContent = names.user2;
     }
 
     // Streak calculation
@@ -452,46 +318,95 @@
       }
     }
 
-    // Event listeners
-    document.querySelectorAll('.card').forEach(card => {
-      card.onclick = () => openSheet(card.dataset.user);
-    });
-
-    sheetBackdrop.onclick = e => { if (e.target === sheetBackdrop) closeSheet(); };
-    $('cancel-btn').onclick = closeSheet;
-    $('confirm-btn').onclick = handleSubmit;
-    passInput.onkeydown = e => { if (e.key === 'Enter') handleSubmit(); };
-
-    // Init
-    (async function init() {
+    async function loadNames() {
       try {
-        const passSnap = await getDoc(doc(db, 'gym-config', 'passwords'));
-        if (passSnap.exists()) passwords = { user1: '', user2: '', ...passSnap.data() };
-        
-        const avatarSnap = await getDoc(doc(db, 'gym-config', 'avatars'));
-        if (avatarSnap.exists()) avatars = { ...DEFAULT_AVATARS, ...avatarSnap.data() };
-
         const namesSnap = await getDoc(doc(db, 'gym-config', 'names'));
         if (namesSnap.exists()) names = { ...DEFAULT_NAMES, ...namesSnap.data() };
       } catch (e) {
-        console.error('Firebase load error:', e);
+        console.error('Failed to load names:', e);
       }
-      updateUI();
-      loadStreaks();
+      updateStreakNames();
+    }
 
-      // Show install banner on iOS Safari if not already installed
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isStandalone = window.navigator.standalone === true;
-      const dismissed = localStorage.getItem('installBannerDismissed');
-      
-      if (isIOS && !isStandalone && !dismissed) {
-        setTimeout(() => $('install-banner').classList.add('show'), 2000);
+    // Check if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userId = EMAIL_TO_USER[user.email];
+        if (userId) {
+          window.location.href = `dashboard.html?user=${userId}`;
+        }
       }
-    })();
+    });
+
+    // Handle login
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim().toLowerCase();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        errorMsg.textContent = 'Please enter email and password';
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Logging in...';
+      errorMsg.classList.remove('show');
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userId = EMAIL_TO_USER[userCredential.user.email];
+        
+        if (!userId) {
+          errorMsg.textContent = 'Account not authorized for this app';
+          errorMsg.classList.add('show');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Log In';
+          return;
+        }
+
+        showToast('Welcome back!');
+        setTimeout(() => {
+          window.location.href = `dashboard.html?user=${userId}`;
+        }, 600);
+
+      } catch (error) {
+        console.error('Login error:', error);
+        
+        let message = 'Login failed. Please try again.';
+        if (error.code === 'auth/invalid-email') {
+          message = 'Invalid email address';
+        } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          message = 'Invalid email or password';
+        } else if (error.code === 'auth/too-many-requests') {
+          message = 'Too many attempts. Try again later.';
+        }
+
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Log In';
+      }
+    };
+
+    // Init
+    loadNames();
+    loadStreaks();
+
+    // Show install banner on iOS Safari if not already installed
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true;
+    const dismissed = localStorage.getItem('installBannerDismissed');
+    
+    if (isIOS && !isStandalone && !dismissed) {
+      setTimeout(() => $('install-banner').classList.add('show'), 2000);
+    }
 
     // Install banner handlers
     $('install-btn').onclick = () => {
-      alert('1. Tap the Share button (square with arrow)\\n2. Scroll down and tap "Add to Home Screen"\\n3. Tap "Add" in the top right');
+      alert('1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right');
     };
     $('install-close').onclick = () => {
       $('install-banner').classList.remove('show');
