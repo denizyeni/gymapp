@@ -397,7 +397,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 8px;
       margin: 16px 0;
       padding: 12px;
       background: var(--bg-elevated);
@@ -406,10 +406,10 @@
     .like-btn {
       background: none;
       border: none;
-      font-size: 24px;
+      font-size: 28px;
       cursor: pointer;
       transition: transform 150ms ease;
-      padding: 8px;
+      padding: 0;
       line-height: 1;
     }
     .like-btn:hover {
@@ -423,9 +423,10 @@
       50% { transform: scale(1.2); }
     }
     .like-count {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
       color: var(--text-primary);
+      min-width: 20px;
     }
 
     /* Text input for name */
@@ -821,7 +822,7 @@
       const isLiked = likes.includes(currentUser);
       els.likeBtn.textContent = isLiked ? '❤️' : '🤍';
       els.likeBtn.classList.toggle('liked', isLiked);
-      els.likeCount.textContent = likes.length === 1 ? '1 like' : `${likes.length} likes`;
+      els.likeCount.textContent = likes.length;
     }
 
     async function loadComments(docId) {
