@@ -294,8 +294,88 @@
     .viewer-modal { text-align: center; }
     .viewer-modal h3 { margin-bottom: 4px; }
     .viewer-modal p { color: var(--text-secondary); margin-bottom: 16px; }
-    .viewer-photo { aspect-ratio: 3/4; max-height: 50vh; }
+    .viewer-photo { aspect-ratio: 3/4; max-height: 40vh; }
     .viewer-photo img { border-radius: 12px; }
+    .viewer-caption {
+      margin: 12px 0;
+      padding: 10px 14px;
+      background: var(--bg-elevated);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text-primary);
+      text-align: left;
+    }
+    .comments-section {
+      margin-top: 16px;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .comments-section h4 {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .comment {
+      background: var(--bg-elevated);
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .comment-author {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .comment-text {
+      font-size: 13px;
+      color: var(--text-primary);
+      word-wrap: break-word;
+    }
+    .comment-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .no-comments {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-style: italic;
+    }
+    .comment-input-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .comment-input-wrap input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 2px solid var(--bg-elevated);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .comment-input-wrap input:focus { border-color: var(--accent); }
+    .comment-input-wrap button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .comment-input-wrap button:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
 
     /* Text input for name */
     .modal input[type="text"] {
@@ -389,6 +469,15 @@
       <div class="photo-preview viewer-photo" id="viewer-image">
         <span>Loading...</span>
       </div>
+      <div class="viewer-caption" id="viewer-caption" style="display: none;"></div>
+      <div class="comments-section">
+        <h4>Comments</h4>
+        <div id="comments-list"><span class="no-comments">No comments yet</span></div>
+        <div class="comment-input-wrap">
+          <input type="text" id="comment-input" placeholder="Add a comment..." maxlength="200">
+          <button id="submit-comment-btn">Post</button>
+        </div>
+      </div>
       <button class="modal-close" id="close-viewer">Close</button>
     </div>
   </div>
@@ -402,6 +491,8 @@
         <span>No photo selected</span>
       </div>
       <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
+      <label for="caption-input">Caption (optional)</label>
+      <input type="text" id="caption-input" placeholder="What did you work on today?" maxlength="100">
       <div class="modal-actions">
         <button class="modal-btn secondary" id="select-photo-btn">Select Photo</button>
         <button class="modal-btn primary" id="upload-btn" disabled>Submit</button>
@@ -517,9 +608,10 @@
     
     let currentMonth = new Date();
     let viewingPartner = false;
-    let myCheckIns = new Map();
-    let partnerCheckIns = new Map();
+    let myCheckIns = new Map();      // { date: { photoUrl, caption, docId } }
+    let partnerCheckIns = new Map(); // { date: { photoUrl, caption, docId } }
     let selectedPhoto = null;
+    let currentViewingDate = null;   // Track which check-in is being viewed
     let avatars = { ...DEFAULT_AVATARS };
     let names = { ...DEFAULT_NAMES };
     let selectedAvatar = null;
@@ -548,6 +640,10 @@
       viewerDate: $('viewer-date'),
       viewerImage: $('viewer-image'),
       closeViewer: $('close-viewer'),
+      viewerCaption: $('viewer-caption'),
+      commentsList: $('comments-list'),
+      commentInput: $('comment-input'),
+      submitCommentBtn: $('submit-comment-btn'),
       avatarModal: $('avatar-modal'),
       avatarInput: $('avatar-input'),
       avatarPreview: $('avatar-preview'),
@@ -630,18 +726,110 @@
     }
 
     // ========== PHOTO VIEWER ==========
-    function showPhoto(dateStr, day, month, year) {
+    async function showPhoto(dateStr, day, month, year) {
       const checkIns = viewingPartner ? partnerCheckIns : myCheckIns;
       const userId = viewingPartner ? partnerUser : currentUser;
       const name = names[userId];
-      const photoUrl = checkIns.get(dateStr);
+      const data = checkIns.get(dateStr);
+      
+      currentViewingDate = dateStr;
 
       els.viewerTitle.textContent = `${name}'s Check-In`;
       els.viewerDate.textContent = `${MONTH_NAMES[month]} ${day}, ${year}`;
-      els.viewerImage.innerHTML = photoUrl 
-        ? `<img src="${photoUrl}" alt="Gym proof">`
+      els.viewerImage.innerHTML = data?.photoUrl 
+        ? `<img src="${data.photoUrl}" alt="Gym proof">`
         : '<span>No photo available</span>';
+      
+      // Show caption if exists
+      if (data?.caption) {
+        els.viewerCaption.textContent = data.caption;
+        els.viewerCaption.style.display = 'block';
+      } else {
+        els.viewerCaption.style.display = 'none';
+      }
+      
+      // Load and display comments
+      els.commentInput.value = '';
+      await loadComments(data?.docId);
+      
       els.photoViewer.classList.add('active');
+    }
+
+    async function loadComments(docId) {
+      if (!docId) {
+        els.commentsList.innerHTML = '<span class="no-comments">No comments yet</span>';
+        return;
+      }
+      
+      try {
+        const commentsSnap = await getDocs(
+          query(collection(db, 'check-ins', docId, 'comments'))
+        );
+        
+        if (commentsSnap.empty) {
+          els.commentsList.innerHTML = '<span class="no-comments">No comments yet</span>';
+          return;
+        }
+        
+        const comments = [];
+        commentsSnap.forEach(doc => {
+          comments.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Sort by timestamp
+        comments.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        
+        els.commentsList.innerHTML = comments.map(c => `
+          <div class="comment">
+            <div class="comment-author">${names[c.userId] || 'Unknown'}</div>
+            <div class="comment-text">${escapeHtml(c.text)}</div>
+            <div class="comment-time">${formatTime(c.timestamp)}</div>
+          </div>
+        `).join('');
+        
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+        els.commentsList.innerHTML = '<span class="no-comments">Failed to load comments</span>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp.seconds * 1000);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function submitComment() {
+      const text = els.commentInput.value.trim();
+      if (!text) return;
+      
+      const checkIns = viewingPartner ? partnerCheckIns : myCheckIns;
+      const data = checkIns.get(currentViewingDate);
+      if (!data?.docId) return;
+      
+      els.submitCommentBtn.disabled = true;
+      
+      try {
+        await addDoc(collection(db, 'check-ins', data.docId, 'comments'), {
+          userId: currentUser,
+          text: text,
+          timestamp: serverTimestamp()
+        });
+        
+        els.commentInput.value = '';
+        await loadComments(data.docId);
+      } catch (err) {
+        console.error('Failed to post comment:', err);
+        alert('Failed to post comment');
+      } finally {
+        els.submitCommentBtn.disabled = false;
+      }
     }
 
     // ========== PHOTO UPLOAD MODAL ==========
@@ -655,6 +843,7 @@
       els.uploadBtn.disabled = true;
       els.uploadStatus.textContent = '';
       els.uploadStatus.classList.remove('error');
+      $('caption-input').value = '';
       els.photoModal.classList.add('active');
     }
 
@@ -703,6 +892,7 @@
       if (!selectedPhoto) return;
       
       const todayStr = getTodayStr();
+      const caption = $('caption-input').value.trim();
       els.uploadBtn.disabled = true;
       els.uploadStatus.textContent = 'Uploading...';
       els.uploadStatus.classList.remove('error');
@@ -728,14 +918,15 @@
 
         els.uploadStatus.textContent = 'Saving...';
 
-        await addDoc(collection(db, 'check-ins'), {
+        const docRef = await addDoc(collection(db, 'check-ins'), {
           userId: currentUser,
           date: todayStr,
           photoUrl: photoUrl,
+          caption: caption,
           timestamp: serverTimestamp()
         });
 
-        myCheckIns.set(todayStr, photoUrl);
+        myCheckIns.set(todayStr, { photoUrl, caption, docId: docRef.id });
         els.uploadStatus.textContent = 'Done!';
         renderCalendar();
 
@@ -757,14 +948,22 @@
           getDocs(query(collection(db, 'check-ins'), where('userId', '==', partnerUser)))
         ]);
 
-        mySnap.forEach(doc => {
-          const d = doc.data();
-          myCheckIns.set(d.date, d.photoUrl || null);
+        mySnap.forEach(docSnap => {
+          const d = docSnap.data();
+          myCheckIns.set(d.date, {
+            photoUrl: d.photoUrl || null,
+            caption: d.caption || '',
+            docId: docSnap.id
+          });
         });
 
-        partnerSnap.forEach(doc => {
-          const d = doc.data();
-          partnerCheckIns.set(d.date, d.photoUrl || null);
+        partnerSnap.forEach(docSnap => {
+          const d = docSnap.data();
+          partnerCheckIns.set(d.date, {
+            photoUrl: d.photoUrl || null,
+            caption: d.caption || '',
+            docId: docSnap.id
+          });
         });
 
         console.log(`Loaded: ${myCheckIns.size} my check-ins, ${partnerCheckIns.size} partner check-ins`);
@@ -1006,8 +1205,10 @@
       els.uploadBtn.onclick = submitCheckIn;
       els.closeModal.onclick = () => els.photoModal.classList.remove('active');
       els.photoModal.onclick = e => { if (e.target === els.photoModal) els.photoModal.classList.remove('active'); };
-      els.closeViewer.onclick = () => els.photoViewer.classList.remove('active');
-      els.photoViewer.onclick = e => { if (e.target === els.photoViewer) els.photoViewer.classList.remove('active'); };
+      els.closeViewer.onclick = () => { els.photoViewer.classList.remove('active'); currentViewingDate = null; };
+      els.photoViewer.onclick = e => { if (e.target === els.photoViewer) { els.photoViewer.classList.remove('active'); currentViewingDate = null; } };
+      els.submitCommentBtn.onclick = submitComment;
+      els.commentInput.onkeydown = e => { if (e.key === 'Enter') submitComment(); };
       
       // Avatar modal
       els.userAvatar.onclick = openAvatarModal;
