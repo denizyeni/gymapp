@@ -323,6 +323,23 @@
       padding: 10px 12px;
       border-radius: 10px;
       margin-bottom: 8px;
+      display: flex;
+      gap: 10px;
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .comment-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comment-content {
+      flex: 1;
     }
     .comment-author {
       font-size: 12px;
@@ -375,6 +392,40 @@
     .comment-input-wrap button:disabled {
       background: #444;
       cursor: not-allowed;
+    }
+    .like-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border-radius: 12px;
+    }
+    .like-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 150ms ease;
+      padding: 8px;
+      line-height: 1;
+    }
+    .like-btn:hover {
+      transform: scale(1.15);
+    }
+    .like-btn.liked {
+      animation: heartPulse 0.3s ease;
+    }
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    .like-count {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
     }
 
     /* Text input for name */
@@ -470,6 +521,10 @@
         <span>Loading...</span>
       </div>
       <div class="viewer-caption" id="viewer-caption" style="display: none;"></div>
+      <div class="like-section">
+        <button class="like-btn" id="like-btn">🤍</button>
+        <span class="like-count" id="like-count">0 likes</span>
+      </div>
       <div class="comments-section">
         <h4>Comments</h4>
         <div id="comments-list"><span class="no-comments">No comments yet</span></div>
@@ -608,10 +663,11 @@
     
     let currentMonth = new Date();
     let viewingPartner = false;
-    let myCheckIns = new Map();      // { date: { photoUrl, caption, docId } }
-    let partnerCheckIns = new Map(); // { date: { photoUrl, caption, docId } }
+    let myCheckIns = new Map();      // { date: { photoUrl, caption, docId, likes } }
+    let partnerCheckIns = new Map(); // { date: { photoUrl, caption, docId, likes } }
     let selectedPhoto = null;
     let currentViewingDate = null;   // Track which check-in is being viewed
+    let currentViewingDocId = null;  // Track document ID for likes
     let avatars = { ...DEFAULT_AVATARS };
     let names = { ...DEFAULT_NAMES };
     let selectedAvatar = null;
@@ -641,6 +697,8 @@
       viewerImage: $('viewer-image'),
       closeViewer: $('close-viewer'),
       viewerCaption: $('viewer-caption'),
+      likeBtn: $('like-btn'),
+      likeCount: $('like-count'),
       commentsList: $('comments-list'),
       commentInput: $('comment-input'),
       submitCommentBtn: $('submit-comment-btn'),
@@ -733,6 +791,7 @@
       const data = checkIns.get(dateStr);
       
       currentViewingDate = dateStr;
+      currentViewingDocId = data?.docId;
 
       els.viewerTitle.textContent = `${name}'s Check-In`;
       els.viewerDate.textContent = `${MONTH_NAMES[month]} ${day}, ${year}`;
@@ -748,11 +807,21 @@
         els.viewerCaption.style.display = 'none';
       }
       
+      // Update like button
+      updateLikeButton(data?.likes || []);
+      
       // Load and display comments
       els.commentInput.value = '';
       await loadComments(data?.docId);
       
       els.photoViewer.classList.add('active');
+    }
+
+    function updateLikeButton(likes) {
+      const isLiked = likes.includes(currentUser);
+      els.likeBtn.textContent = isLiked ? '❤️' : '🤍';
+      els.likeBtn.classList.toggle('liked', isLiked);
+      els.likeCount.textContent = likes.length === 1 ? '1 like' : `${likes.length} likes`;
     }
 
     async function loadComments(docId) {
@@ -781,9 +850,14 @@
         
         els.commentsList.innerHTML = comments.map(c => `
           <div class="comment">
-            <div class="comment-author">${names[c.userId] || 'Unknown'}</div>
-            <div class="comment-text">${escapeHtml(c.text)}</div>
-            <div class="comment-time">${formatTime(c.timestamp)}</div>
+            <div class="comment-avatar">
+              <img src="${avatars[c.userId] || ''}" alt="${names[c.userId] || 'User'}">
+            </div>
+            <div class="comment-content">
+              <div class="comment-author">${names[c.userId] || 'Unknown'}</div>
+              <div class="comment-text">${escapeHtml(c.text)}</div>
+              <div class="comment-time">${formatTime(c.timestamp)}</div>
+            </div>
           </div>
         `).join('');
         
@@ -829,6 +903,37 @@
         alert('Failed to post comment');
       } finally {
         els.submitCommentBtn.disabled = false;
+      }
+    }
+
+    async function toggleLike() {
+      if (!currentViewingDocId) return;
+      
+      const checkIns = viewingPartner ? partnerCheckIns : myCheckIns;
+      const data = checkIns.get(currentViewingDate);
+      if (!data) return;
+      
+      const likes = data.likes || [];
+      const isLiked = likes.includes(currentUser);
+      
+      let newLikes;
+      if (isLiked) {
+        newLikes = likes.filter(id => id !== currentUser);
+      } else {
+        newLikes = [...likes, currentUser];
+      }
+      
+      try {
+        await setDoc(doc(db, 'check-ins', currentViewingDocId), 
+          { likes: newLikes }, 
+          { merge: true }
+        );
+        
+        // Update local state
+        data.likes = newLikes;
+        updateLikeButton(newLikes);
+      } catch (err) {
+        console.error('Failed to toggle like:', err);
       }
     }
 
@@ -923,10 +1028,11 @@
           date: todayStr,
           photoUrl: photoUrl,
           caption: caption,
+          likes: [],
           timestamp: serverTimestamp()
         });
 
-        myCheckIns.set(todayStr, { photoUrl, caption, docId: docRef.id });
+        myCheckIns.set(todayStr, { photoUrl, caption, docId: docRef.id, likes: [] });
         els.uploadStatus.textContent = 'Done!';
         renderCalendar();
 
@@ -953,7 +1059,8 @@
           myCheckIns.set(d.date, {
             photoUrl: d.photoUrl || null,
             caption: d.caption || '',
-            docId: docSnap.id
+            docId: docSnap.id,
+            likes: d.likes || []
           });
         });
 
@@ -962,7 +1069,8 @@
           partnerCheckIns.set(d.date, {
             photoUrl: d.photoUrl || null,
             caption: d.caption || '',
-            docId: docSnap.id
+            docId: docSnap.id,
+            likes: d.likes || []
           });
         });
 
@@ -1205,8 +1313,9 @@
       els.uploadBtn.onclick = submitCheckIn;
       els.closeModal.onclick = () => els.photoModal.classList.remove('active');
       els.photoModal.onclick = e => { if (e.target === els.photoModal) els.photoModal.classList.remove('active'); };
-      els.closeViewer.onclick = () => { els.photoViewer.classList.remove('active'); currentViewingDate = null; };
-      els.photoViewer.onclick = e => { if (e.target === els.photoViewer) { els.photoViewer.classList.remove('active'); currentViewingDate = null; } };
+      els.closeViewer.onclick = () => { els.photoViewer.classList.remove('active'); currentViewingDate = null; currentViewingDocId = null; };
+      els.photoViewer.onclick = e => { if (e.target === els.photoViewer) { els.photoViewer.classList.remove('active'); currentViewingDate = null; currentViewingDocId = null; } };
+      els.likeBtn.onclick = toggleLike;
       els.submitCommentBtn.onclick = submitComment;
       els.commentInput.onkeydown = e => { if (e.key === 'Enter') submitComment(); };
       
