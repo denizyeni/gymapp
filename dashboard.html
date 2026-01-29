@@ -610,7 +610,7 @@
   </div>
 
   <script type="module">
-    import { db, auth, doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp, signOut, onAuthStateChanged } from './firebase-config.js';
+    import { db, auth, doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp, signOut, onAuthStateChanged, onSnapshot } from './firebase-config.js';
     import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     // Map Firebase Auth emails to user IDs
@@ -672,6 +672,8 @@
     let avatars = { ...DEFAULT_AVATARS };
     let names = { ...DEFAULT_NAMES };
     let selectedAvatar = null;
+    let notificationsEnabled = false;
+    let isFirstLoad = true;  // Track first load to avoid notifications for existing data
 
     // ========== DOM ELEMENTS ==========
     const $ = id => document.getElementById(id);
@@ -720,6 +722,40 @@
     const formatDate = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const getTodayStr = () => { const d = new Date(); return formatDate(d.getFullYear(), d.getMonth(), d.getDate()); };
     const isToday = (y, m, d) => { const t = new Date(); return y === t.getFullYear() && m === t.getMonth() && d === t.getDate(); };
+
+    // ========== NOTIFICATIONS ==========
+    async function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        console.log('This browser does not support notifications');
+        return;
+      }
+      
+      if (Notification.permission === 'granted') {
+        notificationsEnabled = true;
+        return;
+      }
+      
+      if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          notificationsEnabled = true;
+          showNotification('Notifications enabled!', 'You\'ll get notified when your partner uploads photos or interacts with your posts.');
+        }
+      }
+    }
+
+    function showNotification(title, body) {
+      if (!notificationsEnabled || document.hasFocus()) return;  // Don't show if page is focused
+      
+      if (Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body,
+          icon: avatars[partnerUser] || '',
+          badge: avatars[partnerUser] || '',
+          tag: 'gym-tracker'
+        });
+      }
+    }
 
     // ========== CALENDAR RENDERING ==========
     function updateTitle() {
@@ -1050,6 +1086,7 @@
     // ========== LOAD DATA ==========
     async function loadCheckIns() {
       try {
+        // Load initial data
         const [mySnap, partnerSnap] = await Promise.all([
           getDocs(query(collection(db, 'check-ins'), where('userId', '==', currentUser))),
           getDocs(query(collection(db, 'check-ins'), where('userId', '==', partnerUser)))
@@ -1076,10 +1113,85 @@
         });
 
         console.log(`Loaded: ${myCheckIns.size} my check-ins, ${partnerCheckIns.size} partner check-ins`);
+        renderCalendar();
+        
+        // Set up real-time listeners after initial load
+        setTimeout(() => {
+          isFirstLoad = false;
+          setupRealtimeListeners();
+        }, 2000);  // Wait 2 seconds before enabling notifications
+        
       } catch (err) {
         console.error('Failed to load check-ins:', err);
       }
-      renderCalendar();
+    }
+
+    function setupRealtimeListeners() {
+      // Listen for partner's new check-ins
+      onSnapshot(query(collection(db, 'check-ins'), where('userId', '==', partnerUser)), (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' && !isFirstLoad) {
+            const d = change.doc.data();
+            partnerCheckIns.set(d.date, {
+              photoUrl: d.photoUrl || null,
+              caption: d.caption || '',
+              docId: change.doc.id,
+              likes: d.likes || []
+            });
+            renderCalendar();
+            showNotification(`${names[partnerUser]} uploaded a new photo!`, d.caption || 'Check it out!');
+          } else if (change.type === 'modified') {
+            const d = change.doc.data();
+            const oldData = partnerCheckIns.get(d.date);
+            partnerCheckIns.set(d.date, {
+              photoUrl: d.photoUrl || null,
+              caption: d.caption || '',
+              docId: change.doc.id,
+              likes: d.likes || []
+            });
+          }
+        });
+      });
+
+      // Listen for likes and comments on my check-ins
+      onSnapshot(query(collection(db, 'check-ins'), where('userId', '==', currentUser)), (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'modified' && !isFirstLoad) {
+            const d = change.doc.data();
+            const oldData = myCheckIns.get(d.date);
+            
+            // Check if someone liked the post
+            if (oldData && d.likes && d.likes.length > (oldData.likes?.length || 0)) {
+              if (d.likes.includes(partnerUser) && !(oldData.likes || []).includes(partnerUser)) {
+                showNotification(`${names[partnerUser]} liked your post!`, d.caption || '');
+              }
+            }
+            
+            myCheckIns.set(d.date, {
+              photoUrl: d.photoUrl || null,
+              caption: d.caption || '',
+              docId: change.doc.id,
+              likes: d.likes || []
+            });
+          }
+        });
+      });
+
+      // Listen for comments on my check-ins
+      myCheckIns.forEach((data, date) => {
+        if (data.docId) {
+          onSnapshot(collection(db, 'check-ins', data.docId, 'comments'), (snapshot) => {
+            snapshot.docChanges().forEach(change => {
+              if (change.type === 'added' && !isFirstLoad) {
+                const comment = change.doc.data();
+                if (comment.userId === partnerUser) {
+                  showNotification(`${names[partnerUser]} commented on your post!`, comment.text);
+                }
+              }
+            });
+          });
+        }
+      });
     }
 
     async function loadAvatars() {
@@ -1352,6 +1464,9 @@
       loadAvatars();
       loadNames();
       loadCheckIns();
+      
+      // Request notification permission after a short delay
+      setTimeout(requestNotificationPermission, 1500);
     }
   </script>
 </body>
