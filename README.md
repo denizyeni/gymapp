@@ -1,4 +1,4 @@
-# Gym Tracker Application
+# Gym Tracker Applicatio# Gym Tracker Application
 
 A Progressive Web App (PWA) for tracking gym attendance with shared calendar features, photo proof verification, and social engagement capabilities.
 
