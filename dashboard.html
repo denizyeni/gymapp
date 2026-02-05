@@ -1268,6 +1268,11 @@
       }
     }
 
+    // Expose handlers for inline onclick in module scope
+    window.toggleCommentMenu = toggleCommentMenu;
+    window.editCommentClick = editCommentClick;
+    window.deleteCommentClick = deleteCommentClick;
+
     async function toggleLike() {
       if (!currentViewingDocId) return;
       
