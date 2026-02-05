@@ -325,6 +325,7 @@
       margin-bottom: 8px;
       display: flex;
       gap: 10px;
+      position: relative;
     }
     .comment-avatar {
       width: 32px;
@@ -357,6 +358,52 @@
       color: var(--text-secondary);
       margin-top: 4px;
     }
+    .comment-menu-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 150ms ease;
+      flex-shrink: 0;
+    }
+    .comment-menu-btn:hover { color: var(--text-primary); }
+    .comment-menu {
+      position: absolute;
+      top: 20px;
+      right: 8px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      min-width: 140px;
+      display: none;
+      flex-direction: column;
+      z-index: 300;
+    }
+    .comment-menu.active { display: flex; }
+    .comment-menu-item {
+      padding: 10px 14px;
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: all 150ms ease;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .comment-menu-item:last-child { border-bottom: none; }
+    .comment-menu-item:hover { background: var(--bg-elevated); color: var(--accent); }
+    .comment-menu-item.delete:hover { color: var(--danger); }
     .no-comments {
       color: var(--text-secondary);
       font-size: 13px;
@@ -453,12 +500,140 @@
       text-transform: uppercase; 
       letter-spacing: 0.5px; 
     }
+
+    /* Settings & Notifications */
+    .header-icon-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 20px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: all 150ms ease;
+      position: relative;
+    }
+    .header-icon-btn:hover { background: var(--accent); }
+    .header-icon-btn.has-notifications::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 10px;
+      height: 10px;
+      background: var(--danger);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--bg-card);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      min-width: 220px;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      margin-top: 8px;
+    }
+    .dropdown-menu.active { display: flex; }
+    .dropdown-item {
+      padding: 14px 18px;
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 150ms ease;
+      text-align: left;
+      font-family: inherit;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: var(--bg-elevated); color: var(--accent); }
+    .dropdown-item.danger:hover { color: var(--danger); }
+
+    .notifications-panel {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--bg-card);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      min-width: 320px;
+      max-width: 400px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      margin-top: 8px;
+    }
+    .notifications-panel.active { display: flex; }
+    .notifications-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .notification-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+    .notification-item:hover { background: var(--bg-elevated); }
+    .notification-item:last-child { border-bottom: none; }
+    .notification-user {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .notification-text {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .notification-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .notifications-empty {
+      padding: 24px 18px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .header-section {
+      position: relative;
+    }
     
     @media (max-width: 560px) {
       body { padding: 12px; }
       .container { border-radius: 24px; }
       .day-number { font-size: 14px; }
       .weekday { font-size: 11px; }
+      .dropdown-menu, .notifications-panel { min-width: 280px; }
     }
   </style>
 </head>
@@ -470,8 +645,22 @@
         <div class="user-name" id="user-name" title="Change name">-</div>
       </div>
       <div class="header-right">
-        <button class="header-btn" id="password-btn">Password</button>
-        <button class="header-btn" id="logout-btn">Log Out</button>
+        <div class="header-section">
+          <button class="header-icon-btn" id="notifications-btn" title="Recent activity">🔔</button>
+          <div class="notifications-panel" id="notifications-panel">
+            <div class="notifications-header">Recent Activity</div>
+            <div id="notifications-list"></div>
+          </div>
+        </div>
+        <div class="header-section">
+          <button class="header-icon-btn" id="settings-btn" title="Settings">⚙️</button>
+          <div class="dropdown-menu" id="settings-menu">
+            <button class="dropdown-item" id="settings-profile-picture">Change Profile Picture</button>
+            <button class="dropdown-item" id="settings-name">Change Name</button>
+            <button class="dropdown-item" id="settings-password">Change Password</button>
+            <button class="dropdown-item danger" id="settings-logout">Log Out</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -609,6 +798,20 @@
     </div>
   </div>
 
+  <!-- Edit Comment Modal -->
+  <div class="modal-backdrop" id="edit-comment-modal">
+    <div class="modal">
+      <h3>Edit Comment</h3>
+      <p>Update your comment</p>
+      <label for="edit-comment-input">Comment</label>
+      <input type="text" id="edit-comment-input" placeholder="Edit comment..." maxlength="200">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="cancel-edit-comment-btn">Cancel</button>
+        <button class="modal-btn primary" id="save-edit-comment-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { db, auth, doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, serverTimestamp, signOut, onAuthStateChanged, onSnapshot } from './firebase-config.js';
     import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -674,6 +877,9 @@
     let selectedAvatar = null;
     let notificationsEnabled = false;
     let isFirstLoad = true;  // Track first load to avoid notifications for existing data
+    let notifications = [];  // Array of recent activities: { type, user, text, time, avatar }
+    let editingCommentId = null;    // Track which comment is being edited
+    let editingCommentDocId = null; // Track parent check-in document ID
 
     // ========== DOM ELEMENTS ==========
     const $ = id => document.getElementById(id);
@@ -754,6 +960,58 @@
           badge: avatars[partnerUser] || '',
           tag: 'gym-tracker'
         });
+      }
+    }
+
+    function addActivityNotification(type, user, text) {
+      notifications.unshift({
+        type: type,  // 'upload', 'like', 'comment'
+        user: user,
+        text: text,
+        time: new Date(),
+        avatar: avatars[user] || ''
+      });
+      
+      // Keep only last 20 notifications
+      if (notifications.length > 20) {
+        notifications.pop();
+      }
+      
+      updateNotificationsUI();
+    }
+
+    function getTimeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (seconds < 60) return 'just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      
+      return date.toLocaleDateString();
+    }
+
+    function updateNotificationsUI() {
+      const list = $('notifications-list');
+      const btn = $('notifications-btn');
+
+      if (notifications.length === 0) {
+        list.innerHTML = '<div class="notifications-empty">No recent activity</div>';
+        btn.classList.remove('has-notifications');
+      } else {
+        btn.classList.add('has-notifications');
+        list.innerHTML = notifications.map(n => `
+          <div class="notification-item">
+            <div class="notification-user">${names[n.user] || n.user}</div>
+            <div class="notification-text">${n.text}</div>
+            <div class="notification-time">${getTimeAgo(n.time)}</div>
+          </div>
+        `).join('');
       }
     }
 
@@ -879,14 +1137,17 @@
         
         const comments = [];
         commentsSnap.forEach(doc => {
-          comments.push({ id: doc.id, ...doc.data() });
+          comments.push({ docId: doc.id, ...doc.data() });
         });
         
-        // Sort by timestamp
-        comments.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        // Filter out deleted comments
+        const activeComments = comments.filter(c => !c.deleted);
         
-        els.commentsList.innerHTML = comments.map(c => `
-          <div class="comment">
+        // Sort by timestamp
+        activeComments.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        
+        els.commentsList.innerHTML = activeComments.map((c, idx) => `
+          <div class="comment" data-comment-id="${c.docId}" data-check-in-id="${currentViewingDocId}">
             <div class="comment-avatar">
               <img src="${avatars[c.userId] || ''}" alt="${names[c.userId] || 'User'}">
             </div>
@@ -895,6 +1156,13 @@
               <div class="comment-text">${escapeHtml(c.text)}</div>
               <div class="comment-time">${formatTime(c.timestamp)}</div>
             </div>
+            ${c.userId === currentUser ? `
+              <button class="comment-menu-btn" onclick="toggleCommentMenu(this, event)">...</button>
+              <div class="comment-menu">
+                <button class="comment-menu-item" onclick="editCommentClick('${c.docId}', '${escapeHtml(c.text).replace(/'/g, "\\'")}', event)">Edit</button>
+                <button class="comment-menu-item delete" onclick="deleteCommentClick('${c.docId}', event)">Delete</button>
+              </div>
+            ` : ''}
           </div>
         `).join('');
         
@@ -940,6 +1208,63 @@
         alert('Failed to post comment');
       } finally {
         els.submitCommentBtn.disabled = false;
+      }
+    }
+
+    function toggleCommentMenu(btn, event) {
+      event.stopPropagation();
+      const menu = btn.nextElementSibling;
+      const allMenus = document.querySelectorAll('.comment-menu');
+      allMenus.forEach(m => m.classList.remove('active'));
+      menu?.classList.toggle('active');
+    }
+
+    function editCommentClick(commentId, text, event) {
+      event.stopPropagation();
+      editingCommentId = commentId;
+      editingCommentDocId = currentViewingDocId;
+      $('edit-comment-input').value = text;
+      $('edit-comment-modal').classList.add('active');
+      document.querySelectorAll('.comment-menu').forEach(m => m.classList.remove('active'));
+    }
+
+    async function saveEditComment() {
+      const newText = $('edit-comment-input').value.trim();
+      if (!newText || !editingCommentId) return;
+      
+      $('save-edit-comment-btn').disabled = true;
+      
+      try {
+        await setDoc(doc(db, 'check-ins', editingCommentDocId, 'comments', editingCommentId), {
+          text: newText
+        }, { merge: true });
+        
+        $('edit-comment-modal').classList.remove('active');
+        await loadComments(editingCommentDocId);
+      } catch (err) {
+        console.error('Failed to edit comment:', err);
+        alert('Failed to edit comment');
+      } finally {
+        $('save-edit-comment-btn').disabled = false;
+        editingCommentId = null;
+        editingCommentDocId = null;
+      }
+    }
+
+    async function deleteCommentClick(commentId, event) {
+      event.stopPropagation();
+      if (!confirm('Delete this comment?')) return;
+      
+      try {
+        await setDoc(doc(db, 'check-ins', currentViewingDocId, 'comments', commentId), { 
+          deleted: true 
+        }, { merge: true });
+        
+        await loadComments(currentViewingDocId);
+        document.querySelectorAll('.comment-menu').forEach(m => m.classList.remove('active'));
+      } catch (err) {
+        console.error('Failed to delete comment:', err);
+        alert('Failed to delete comment');
       }
     }
 
@@ -1140,6 +1465,7 @@
             });
             renderCalendar();
             showNotification(`${names[partnerUser]} uploaded a new photo!`, d.caption || 'Check it out!');
+            addActivityNotification('upload', partnerUser, `Posted a new gym check-in${d.caption ? ': ' + d.caption : ''}`);
           } else if (change.type === 'modified') {
             const d = change.doc.data();
             const oldData = partnerCheckIns.get(d.date);
@@ -1164,6 +1490,7 @@
             if (oldData && d.likes && d.likes.length > (oldData.likes?.length || 0)) {
               if (d.likes.includes(partnerUser) && !(oldData.likes || []).includes(partnerUser)) {
                 showNotification(`${names[partnerUser]} liked your post!`, d.caption || '');
+                addActivityNotification('like', partnerUser, `Liked your check-in${d.caption ? ': ' + d.caption : ''}`);
               }
             }
             
@@ -1186,6 +1513,7 @@
                 const comment = change.doc.data();
                 if (comment.userId === partnerUser) {
                   showNotification(`${names[partnerUser]} commented on your post!`, comment.text);
+                  addActivityNotification('comment', partnerUser, `Commented: "${comment.text}"`);
                 }
               }
             });
@@ -1447,14 +1775,72 @@
       els.nameInput.onkeydown = e => { if (e.key === 'Enter') saveName(); };
       els.nameModal.onclick = e => { if (e.target === els.nameModal) closeNameModal(); };
 
-      // Logout
-      $('logout-btn').onclick = handleLogout;
+      // Settings menu
+      const settingsBtn = $('settings-btn');
+      const settingsMenu = $('settings-menu');
+      const notificationsBtn = $('notifications-btn');
+      const notificationsPanel = $('notifications-panel');
+
+      settingsBtn.onclick = (e) => {
+        e.stopPropagation();
+        settingsMenu.classList.toggle('active');
+        notificationsPanel.classList.remove('active');
+      };
+
+      $('settings-profile-picture').onclick = () => {
+        settingsMenu.classList.remove('active');
+        openAvatarModal();
+      };
+
+      $('settings-name').onclick = () => {
+        settingsMenu.classList.remove('active');
+        openNameModal();
+      };
+
+      $('settings-password').onclick = () => {
+        settingsMenu.classList.remove('active');
+        openPasswordModal();
+      };
+
+      $('settings-logout').onclick = () => {
+        settingsMenu.classList.remove('active');
+        handleLogout();
+      };
+
+      notificationsBtn.onclick = (e) => {
+        e.stopPropagation();
+        notificationsPanel.classList.toggle('active');
+        settingsMenu.classList.remove('active');
+      };
+
+      // Close menus when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
+          settingsMenu.classList.remove('active');
+        }
+        if (!notificationsBtn.contains(e.target) && !notificationsPanel.contains(e.target)) {
+          notificationsPanel.classList.remove('active');
+        }
+      });
 
       // Password modal
-      $('password-btn').onclick = openPasswordModal;
       $('cancel-password-btn').onclick = closePasswordModal;
       $('save-password-btn').onclick = changePassword;
       passwordModal.onclick = e => { if (e.target === passwordModal) closePasswordModal(); };
+
+      // Edit comment modal
+      const editCommentModal = $('edit-comment-modal');
+      $('cancel-edit-comment-btn').onclick = () => editCommentModal.classList.remove('active');
+      $('save-edit-comment-btn').onclick = saveEditComment;
+      $('edit-comment-input').onkeydown = e => { if (e.key === 'Enter') saveEditComment(); };
+      editCommentModal.onclick = e => { if (e.target === editCommentModal) editCommentModal.classList.remove('active'); };
+
+      // Close comment menus when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.comment-menu-btn') && !e.target.closest('.comment-menu')) {
+          document.querySelectorAll('.comment-menu').forEach(m => m.classList.remove('active'));
+        }
+      });
     }
 
     // ========== INIT APP ==========
